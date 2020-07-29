@@ -3,7 +3,17 @@ import "./App.css";
 import { Route, Link } from "react-router-dom";
 import MainPage from "./components/MainPage";
 import Backend from "./components/Backend";
-import { Navbar, Nav } from "react-bootstrap";
+import { Navbar, Nav, Alert } from "react-bootstrap";
+import { connect } from "react-redux";
+
+const mapStateToProps = (state) => state;
+
+const mapDispatchToProps = (dispatch) => ({
+  logout: () =>
+    dispatch({
+      type: "LOGOUT",
+    }),
+});
 
 class App extends Component {
   state = {
@@ -34,40 +44,60 @@ class App extends Component {
   render() {
     return (
       <>
-        <Navbar bg='light' expand='lg'>
-          <Navbar.Toggle aria-controls='basic-navbar-nav' />
-          <Navbar.Collapse id='basic-navbar-nav'>
-            <Nav className='mr-auto'>
-              <Link to='/' className='nav-link'>
-                Students
-              </Link>
-            </Nav>
-          </Navbar.Collapse>
-        </Navbar>
-        <div className='row mt-2'>
-          <div className='container'>
-            <Route
-              path='/'
-              exact
-              render={(props) => (
-                <MainPage
-                  {...props}
-                  students={this.state.students}
-                  refetch={this.fetchStudents}
+        {this.props.loggedin ? (
+          <>
+            <Navbar bg='light' expand='lg'>
+              <Navbar.Toggle aria-controls='basic-navbar-nav' />
+              <Navbar.Collapse id='basic-navbar-nav'>
+                <Nav className='mr-auto'>
+                  <Link to='/students' className='nav-link'>
+                    Students
+                  </Link>
+                </Nav>
+
+                <span className='mr-3'>
+                  Welcome: {this.props.user.username}
+                </span>
+                <Link
+                  to='/'
+                  onClick={() => this.props.logout()}
+                  style={{ color: "red" }}
+                >
+                  LOG OUT
+                </Link>
+              </Navbar.Collapse>
+            </Navbar>
+            <div className='row mt-2 mr-0'>
+              <div className='container'>
+                <Route
+                  path='/students'
+                  exact
+                  render={(props) => (
+                    <MainPage
+                      {...props}
+                      students={this.state.students}
+                      refetch={this.fetchStudents}
+                    />
+                  )}
                 />
-              )}
-            />
-            <Route
-              path='/backend/:case/:referenceId'
-              render={(props) => (
-                <Backend {...props} refetch={this.fetchStudents} />
-              )}
-            />
+                <Route
+                  path='/backend/:case/:referenceId'
+                  render={(props) => (
+                    <Backend {...props} refetch={this.fetchStudents} />
+                  )}
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className='d-flex  flex-column align-items-center mt-5'>
+            <Alert variant='danger'>You are not logged in!</Alert>
+            <Link to='/'>Go to Log In page!</Link>
           </div>
-        </div>
+        )}
       </>
     );
   }
 }
 
-export default App;
+export default connect(mapStateToProps, mapDispatchToProps)(App);

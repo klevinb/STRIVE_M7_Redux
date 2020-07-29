@@ -43,14 +43,14 @@ class Backend extends Component {
   };
 
   componentDidMount() {
-    if (this.props.match.params.case == "project") {
+    if (this.props.match.params.case === "project") {
       this.setState({
         newProject: {
           ...this.state.newProject,
           studentid: this.props.match.params.referenceId,
         },
       });
-    } else if (this.props.match.params.case == "review") {
+    } else if (this.props.match.params.case === "review") {
       this.setState({
         projectId: this.props.match.params.referenceId,
       });
@@ -98,7 +98,7 @@ class Backend extends Component {
 
     const projectId = await resp.json();
 
-    const resp2 = await fetch(
+    await fetch(
       "http://localhost:3003/projects/" + projectId.projectid + "/uploadPhoto",
       {
         method: "POST",
@@ -137,7 +137,7 @@ class Backend extends Component {
 
     const studentId = await resp.json();
 
-    const resp2 = await fetch(
+    await fetch(
       "http://localhost:3003/students/" + studentId.studentid + "/uploadPhoto",
       {
         method: "POST",
@@ -164,7 +164,7 @@ class Backend extends Component {
   render() {
     return (
       <>
-        {this.props.match.params.case == "project" && (
+        {this.props.match.params.case === "project" && (
           <Form onSubmit={this.addProjectFunction}>
             <Row>
               <Col>
@@ -223,7 +223,7 @@ class Backend extends Component {
             </div>
           </Form>
         )}
-        {this.props.match.params.case == "profile" && (
+        {this.props.match.params.case === "profile" && (
           <Form onSubmit={this.addNewStudent}>
             <Row>
               <Col>

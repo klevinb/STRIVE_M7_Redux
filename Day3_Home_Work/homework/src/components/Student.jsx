@@ -18,11 +18,7 @@ export default ({
     style={{ cursor: "pointer" }}
   >
     <div className='media card-body'>
-      <img
-        className='student-image'
-        src={image}
-        alt={`Student ${name} photo`}
-      />
+      <img className='student-image' src={image} alt={`Student ${name}`} />
       <div>
         <p>{name}</p>
         <p>{surname}</p>

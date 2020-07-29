@@ -14,7 +14,7 @@ class MainPage extends React.Component {
 
   render() {
     return (
-      <div className='row'>
+      <div className='row '>
         <StudentList
           students={this.props.students}
           studentSelected={this.state.studentSelected}
