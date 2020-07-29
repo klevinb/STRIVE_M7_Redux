@@ -3,11 +3,10 @@ const fs = require("fs-extra");
 const path = require("path");
 const uniqid = require("uniqid");
 const multer = require("multer");
+const ProjectsSchema = require("../portfolio/schema");
+const StudentSchema = require("./schema");
+const { find } = require("./schema");
 const q2m = require("query-to-mongo");
-
-const { Op } = require("sequelize");
-const Student = require("../../model/students");
-const Project = require("../../model/projects");
 
 const router = express.Router();
 
@@ -17,28 +16,33 @@ const usersImagePath = path.join(__dirname, "../../public/img/users");
 
 router.get("/", async (req, res, next) => {
   try {
-    const limit = req.query.limit || 10;
-    const offset = req.query.offset || 0;
-    const order = req.query.order || "asc";
+    const query = q2m(req.query);
+    const count = await StudentSchema.countDocuments();
+    const students = await StudentSchema.find(query.criteria)
+      .sort(query.options.sort)
+      .limit(query.options.limit)
+      .skip(query.options.skip)
+      .populate("projects");
+    if (students) {
+      res.status(200).send({
+        nrOfStudents: count,
+        students,
+      });
+    } else {
+      const error = new Error();
+      error.httpStatusCode = 404;
+      error.message = "We dont have any data!";
+      next(error);
+    }
+  } catch (error) {
+    next(error);
+  }
+});
 
-    delete req.query.limit;
-    delete req.query.offset;
-    delete req.query.order;
-    await Student.findAndCountAll({
-      where: {
-        ...req.query,
-      },
-      offset: offset,
-      limit: limit,
-      include: Project,
-    }).then((result) => {
-      if (result.count === 0) res.status(404).send("not found!");
-      else
-        res.send({
-          nrOfStudents: result.count,
-          students: result.rows,
-        });
-    });
+router.get("/:id/projects", async (req, res, next) => {
+  try {
+    const projects = await ProjectsSchema.find({ studentId: req.params.id });
+    res.send(projects);
   } catch (error) {
     next(error);
   }
@@ -46,17 +50,18 @@ router.get("/", async (req, res, next) => {
 
 router.get("/:id", async (req, res, next) => {
   try {
-    const student = await Student.findOne({
-      where: {
-        studentid: req.params.id,
-      },
-      include: Project,
-    });
-
-    if (student) res.send(student);
-    else res.status(404).send("Not found");
+    const student = await StudentSchema.findById(req.params.id).populate(
+      "projects"
+    );
+    if (student) {
+      res.status(200).send(student);
+    } else {
+      const error = new Error();
+      error.httpStatusCode = 404;
+      error.message = "We dont have any data!";
+      next(error);
+    }
   } catch (error) {
-    console.log(error);
     next(error);
   }
 });
@@ -81,8 +86,9 @@ router.get("/:id/download", (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
-    const student = await Student.create({ studentid: uniqid(), ...req.body });
-    res.send(student);
+    const newStudent = new StudentSchema(req.body);
+    const response = await newStudent.save();
+    res.status(201).send(newStudent);
   } catch (error) {
     next(error);
   }
@@ -98,15 +104,10 @@ router.post(
           path.join(usersImagePath, `${req.params.id}.png`),
           req.file.buffer
         );
-        const student = await Student.update(
-          {
-            image: `http://localhost:3003/img/users/${req.params.id}.png`,
-          },
-          {
-            where: { studentid: req.params.id },
-          }
-        );
-        if (student) res.status(201).send("OK");
+        await StudentSchema.findByIdAndUpdate(req.params.id, {
+          image: `http://localhost:3003/img/users/${req.params.id}.png`,
+        });
+        res.status(201).send("OK");
       } else {
         const err = new Error();
         err.httpStatusCode = 404;
@@ -121,24 +122,15 @@ router.post(
 
 router.post("/checkEmail", async (req, res, next) => {
   try {
-    const checkEmail = await Student.findOne({
-      where: {
-        [Op.and]: [
-          {
-            email: {
-              [Op.eq]: `${req.body.email}`,
-            },
-            studentid: {
-              [Op.ne]: `${req.body.studentid}`,
-            },
-          },
-        ],
-      },
+    const checkEmail = req.body.email;
+    const findEmail = await StudentSchema.find({
+      $and: [{ email: checkEmail }, { _id: { $ne: req.body._id } }],
     });
-
-    console.log(checkEmail);
-    if (checkEmail === null) res.status(200).send(true);
-    else res.status(400).send(false);
+    if (findEmail.length > 0) {
+      res.status(400).send(false);
+    } else {
+      res.status(200).send(true);
+    }
   } catch (error) {
     next(error);
   }
@@ -146,17 +138,18 @@ router.post("/checkEmail", async (req, res, next) => {
 
 router.put("/:id", async (req, res, next) => {
   try {
-    const student = await Student.update(
-      {
-        ...req.body,
-      },
-      {
-        where: { studentid: req.params.id },
-      }
+    const updatedStudent = await StudentSchema.findByIdAndUpdate(
+      req.params.id,
+      req.body
     );
-
-    if (student[0] === 1) res.send("OK");
-    else res.status(404).send("Not found");
+    if (updatedStudent) {
+      res.status(200).send("Updated");
+    } else {
+      const error = new Error();
+      error.httpStatusCode = 404;
+      error.message = "We dont have any data!";
+      next(error);
+    }
   } catch (error) {
     next(error);
   }
@@ -164,14 +157,15 @@ router.put("/:id", async (req, res, next) => {
 
 router.delete("/:id", async (req, res, next) => {
   try {
-    const result = await Student.destroy({
-      where: {
-        studentid: req.params.id,
-      },
-    });
-
-    if (result === 1) res.send("DELETED");
-    else res.status(404).send("Not Found");
+    const students = await StudentSchema.findByIdAndDelete(req.params.id);
+    if (students) {
+      res.status(200).send("Deleted!");
+    } else {
+      const error = new Error();
+      error.httpStatusCode = 404;
+      error.message = "We dont have any data!";
+      next(error);
+    }
   } catch (error) {
     next(error);
   }
