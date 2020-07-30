@@ -1,6 +1,5 @@
 import React from "react";
-import { Table, Button, Card, Col } from "react-bootstrap";
-import StudentImg from "./StudentImg";
+import { Accordion, Button, Card, Col } from "react-bootstrap";
 
 class Table1 extends React.Component {
   goToProjectPage = (id) => {
@@ -22,22 +21,22 @@ class Table1 extends React.Component {
               }}
             >
               <div className='d-flex justify-content-center'>
-                {this.state.imgUrl ? (
+                {student.image ? (
                   <Card.Img
-                    src={this.state.imgUrl}
+                    src={student.image}
                     style={{
                       width: "150px",
                       height: "150px",
                       alignSelf: "center",
                       borderRadius: "50%",
                     }}
-                    onClick={() => this.goToProjectPage(student_id)}
+                    onClick={() => this.goToProjectPage(student._id)}
                   />
                 ) : (
                   <Card.Img
                     src='https://icon-library.com/images/avatar-icon-images/avatar-icon-images-4.jpg'
                     style={{ width: "150px", alignSelf: "center" }}
-                    onClick={() => this.goToProjectPage(student_id)}
+                    onClick={() => this.goToProjectPage(student._id)}
                   />
                 )}
               </div>
@@ -46,15 +45,9 @@ class Table1 extends React.Component {
                 <Card.Title>
                   {student.name} {student.surname}
                 </Card.Title>
-                <Card.Text>{student.email}</Card.Text>
+                <Card.Text className='m-0'>{student.email}</Card.Text>
                 <div className='d-flex justify-content-between'>
-                  <Button
-                    variant='info'
-                    onClick={() => this.goToProjectPage(student._id)}
-                  >
-                    Projects
-                  </Button>
-                  <Button
+                  {/* <Button
                     variant='danger'
                     onClick={() => this.props.deleteStudent(student._id)}
                   >
@@ -65,8 +58,48 @@ class Table1 extends React.Component {
                     onClick={() => this.props.fetchStudentData(student._id)}
                   >
                     Edit
-                  </Button>
+                  </Button> */}
                 </div>
+                {student.projects.length > 0 ? (
+                  <Accordion defaultActiveKey='0'>
+                    <Card style={{ background: "transparent", border: "0px" }}>
+                      <Card.Header
+                        style={{ background: "transparent", border: "0px" }}
+                      >
+                        <Accordion.Toggle
+                          as={Button}
+                          variant='link'
+                          eventKey='1'
+                        >
+                          Projects
+                        </Accordion.Toggle>
+                      </Card.Header>
+                      <Accordion.Collapse eventKey='1'>
+                        <Card.Body
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#ffc300",
+                            borderRadius: "5%",
+                          }}
+                        >
+                          {student.projects.slice(0, 5).map((project) => (
+                            <div className='d-flex justify-content-between align-items-center mb-2'>
+                              <span
+                                style={{
+                                  wordWrap: "break-word",
+                                  maxWidth: "130px",
+                                }}
+                              >
+                                {project.name}
+                              </span>
+                              <Button variant='info'>Info</Button>
+                            </div>
+                          ))}
+                        </Card.Body>
+                      </Accordion.Collapse>
+                    </Card>
+                  </Accordion>
+                ) : null}
               </Card.Body>
             </Card>
           </Col>

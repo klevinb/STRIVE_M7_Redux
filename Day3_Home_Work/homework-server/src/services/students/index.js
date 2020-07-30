@@ -3,7 +3,6 @@ const fs = require("fs-extra");
 const path = require("path");
 const uniqid = require("uniqid");
 const multer = require("multer");
-const ProjectsSchema = require("../portfolio/schema");
 const StudentSchema = require("./schema");
 const { find } = require("./schema");
 const q2m = require("query-to-mongo");
@@ -41,7 +40,9 @@ router.get("/", async (req, res, next) => {
 
 router.get("/:id/projects", async (req, res, next) => {
   try {
-    const projects = await ProjectsSchema.find({ studentId: req.params.id });
+    const projects = await StudentSchema.find({ _id: req.params.id }).populate(
+      "projects"
+    );
     res.send(projects);
   } catch (error) {
     next(error);
