@@ -1,0 +1,75 @@
+.container-fluid{
+    background-color:  #282828;
+    height: 100vh;
+    }
+    .card img{ padding: 3px;
+
+    
+
+    }
+    .container .card{          
+      background-color: #282828;
+    }
+
+    .border-left{
+      border-left: 4px solid rgb(1, 199, 1) !important;
+    }
+    .card-body h6{
+      font-size: small;
+      text-align: center;
+      }
+
+      .card-body p{
+      font-size: medium!important;
+      text-align: center;
+      
+      text-align: center;
+    
+      }
+      .card-body{
+        background-color:  #282828;
+       height: 120px;
+      
+      }
+
+    
+    .bolder{
+color: white;
+font-weight: 700;
+}
+ #imgBackground{
+   background-image: url("/assets/cover.png");
+   background-repeat: no-repeat;
+   background-size: cover;
+   display: block;
+margin-left: auto;
+margin-right: auto;
+
+  
+   height: 350px;
+   width: 100%;
+
+ }
+
+ #removeMarg {
+   max-height: 37vh;
+ }
+ .myAlbum{
+   overflow-y: auto;
+ }
+ #removeMarg a{
+   text-decoration: none;
+   color: whitesmoke
+ }
+
+
+
+
+
+
+#text_alg{
+    text-align: left;
+ 
+    margin: auto;
+   
+  }
