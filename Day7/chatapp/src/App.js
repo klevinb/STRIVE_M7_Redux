@@ -9,19 +9,29 @@ class App extends Component {
   state = {
     username: "",
     message: "",
+    sendToUser: "user1",
     messages: [],
     showModal: true,
   };
 
-  componentDidMount() {
+  componentDidMount = () => {
     const connectionOpt = {
       transports: ["websocket"],
     };
     this.socket = io("https://striveschool.herokuapp.com/", connectionOpt);
-    this.socket.on("bmsg", (msg) =>
-      this.setState({ messages: this.state.messages.concat(msg) })
-    );
-  }
+    this.socket.on("chatmessage", (msg) => {
+      this.setState({ messages: this.state.messages.concat(msg) });
+      console.log(msg);
+    });
+
+    this.socket.on("list", (data) => console.log(data));
+  };
+
+  setUsername = () => {
+    this.socket.emit("setUsername", {
+      username: this.state.username,
+    });
+  };
 
   setMessage = (e) => {
     this.setState({
@@ -33,15 +43,24 @@ class App extends Component {
     this.setState({ showModal: !this.state.showModal });
   };
 
-  sendMessage = (e) => {
-    e.preventDefault();
-    if (this.state.message !== "") {
-      this.socket.emit("bmsg", {
-        user: this.state.username,
-        message: this.state.message,
-      });
-      this.setState({ message: "" });
-    }
+  sendMessage = () => {
+    // e.preventDefault();
+
+    this.socket.emit("chatmessage", {
+      text: this.state.message,
+      to: this.state.sendToUser,
+    });
+    this.setState({
+      message: "",
+      messages: [
+        ...this.state.messages,
+        {
+          from: this.state.username,
+          to: this.state.sendToUser,
+          msg: this.state.message,
+        },
+      ],
+    });
   };
 
   render() {
@@ -50,25 +69,29 @@ class App extends Component {
         <div className='App'>
           <ul id='messages'>
             {this.state.messages.map((msg, i) => (
-              <li
-                key={i}
-                className={
-                  msg.user === this.state.username ? "text-right" : "text-left"
-                }
-              >
-                {console.log(msg, this.state.username)}
-                <strong>{msg.user}</strong> {msg.message}
-              </li>
+              <>
+                {this.state.username === msg.from &&
+                this.state.sendToUser === msg.to ? (
+                  <li key={i} className='text-right'>
+                    {msg.msg}
+                  </li>
+                ) : (
+                  this.state.sendToUser === msg.from && (
+                    <li key={i} className='text-left'>
+                      {msg.from} : {msg.msg}
+                    </li>
+                  )
+                )}
+              </>
             ))}
           </ul>
-          <form id='chat' onSubmit={this.sendMessage}>
-            <input
-              autoComplete='off'
-              value={this.state.message}
-              onChange={this.setMessage}
-            />
-            <button>Send</button>
-          </form>
+
+          <input
+            autoComplete='off'
+            value={this.state.message}
+            onChange={this.setMessage}
+          />
+          <button onClick={() => this.sendMessage()}>Send</button>
         </div>
         <Modal
           size='lg'
@@ -90,7 +113,14 @@ class App extends Component {
               </InputGroup>
             </Modal.Header>
             <Modal.Footer>
-              <Button onClick={this.toggleModal}>Submit</Button>
+              <Button
+                onClick={() => {
+                  this.toggleModal();
+                  this.setUsername();
+                }}
+              >
+                Submit
+              </Button>
             </Modal.Footer>
           </Modal.Body>
         </Modal>
