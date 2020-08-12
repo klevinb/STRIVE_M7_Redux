@@ -216,7 +216,7 @@ class App extends Component<any, State> {
                 <Search setSearch={this.searchState} />
               </Col>
             ) : null}
-            <Col className='mt-4' sm={12} md={6}>
+            <Col className='mt-4' sm={12} md={8} lg={6}>
               <MyLocationData
                 info={this.state.info}
                 searchState={this.searchState}
@@ -228,7 +228,8 @@ class App extends Component<any, State> {
               style={{ borderRadius: "3%", overflow: "hidden" }}
               className='mt-4 p-0'
               sm={12}
-              md={6}
+              md={4}
+              lg={6}
             >
               <Map lat={this.state.lat} lng={this.state.lng} />
             </Col>
